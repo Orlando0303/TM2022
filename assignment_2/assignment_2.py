@@ -45,13 +45,19 @@ class DPSegment(object):
                     continue
                 word_list = line.split() 
                 
-                ##########  # 更新词的集合            
-    
+                ##########  # 更新词的集合
+
+                word_set |= set(word_list)
+
                 for w in word_list:
                     word_count += 1
                     
                     ##########  # 更新词频（每个词的出现次数）
-    
+                    if freq_dict.get(w,0):
+                        freq_dict[w] += 1
+                    else:
+                        freq_dict[w] = 1
+
         prob_dict = {k: (v) / word_count for k, v in freq_dict.items()} # 得到每个词的概率）
         return prob_dict, word_set
 
@@ -81,6 +87,11 @@ class DPSegment(object):
         
         ##########  
         # 得到graph的每对key的value， key为一对节点序号,表示一个词,value为每个词的概率的负对数。
+        L = len(text)
+        for i in range(0,L):
+            for k in range(i,L+1):
+                if text[i:k] in word_set:
+                    graph[(i, k)] = -np.log(dictionary[text[i:k]])
 
         return graph
                 
@@ -110,6 +121,7 @@ class DPSegment(object):
                 if  min_dis > self.graph[(i,target)] + self.viterbi(i, InEdge):
                     ##########  
                     # 更新节点0到节点target的最短路径
+                    min_dis = self.graph[(i, target)] + self.viterbi(i, InEdge)
                     self.last_node[target] = i
             return min_dis
     
